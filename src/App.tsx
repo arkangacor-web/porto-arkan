@@ -37,11 +37,12 @@ const SkillBar = ({ name, icon: Icon, percentage }: { name: string, icon: any, p
     </div>
     <div className="h-2 bg-white/5 rounded-full overflow-hidden">
       <motion.div
-        className="h-full bg-gradient-to-r from-glow-purple to-neon-purple"
-        initial={{ width: 0 }}
-        whileInView={{ width: `${percentage}%` }}
+        className="h-full bg-gradient-to-r from-glow-purple to-neon-purple origin-left"
+        initial={{ scaleX: 0 }}
+        whileInView={{ scaleX: percentage / 100 }}
         viewport={{ once: true }}
         transition={{ duration: 1, delay: 0.2 }}
+        style={{ width: '100%' }}
       />
     </div>
   </motion.div>

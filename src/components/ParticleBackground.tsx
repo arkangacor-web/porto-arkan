@@ -22,7 +22,7 @@ export const ParticleBackground = () => {
     let animationFrameId: number;
     let particles: Particle[] = [];
     const particleCount = 150;
-    const connectionDistance = 200;
+    const connectionDistance = 150; // Slightly reduced
     const colors = ['#ffffff', '#e0b0ff', '#b026ff', '#7000ff', '#ff00ff'];
     let mouse = { x: -1000, y: -1000 };
     let time = 0;
@@ -39,14 +39,16 @@ export const ParticleBackground = () => {
     };
 
     const initParticles = () => {
+      // Dynamic particle count based on screen width
+      const count = window.innerWidth < 768 ? 50 : 120;
       particles = [];
-      for (let i = 0; i < particleCount; i++) {
+      for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 3.5,
-          vy: (Math.random() - 0.5) * 3.5,
-          size: Math.random() * 3.5 + 1.5,
+          vx: (Math.random() - 0.5) * 2.5, // Reduced velocity slightly
+          vy: (Math.random() - 0.5) * 2.5,
+          size: Math.random() * 2.5 + 1.2,
           color: colors[Math.floor(Math.random() * colors.length)],
         });
       }
@@ -58,8 +60,8 @@ export const ParticleBackground = () => {
 
       particles.forEach((p, i) => {
         // Move with a bit of chaotic jitter
-        p.x += p.vx + Math.sin(time + i) * 0.5;
-        p.y += p.vy + Math.cos(time + i) * 0.5;
+        p.x += p.vx + Math.sin(time + i) * 0.3;
+        p.y += p.vy + Math.cos(time + i) * 0.3;
 
         // Bounce
         if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
@@ -69,43 +71,43 @@ export const ParticleBackground = () => {
         const mdx = mouse.x - p.x;
         const mdy = mouse.y - p.y;
         const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
-        if (mdist < 250) {
+        if (mdist < 200) {
           const angle = Math.atan2(mdy, mdx);
-          const force = (250 - mdist) / 250;
-          p.x -= Math.cos(angle) * force * 12;
-          p.y -= Math.sin(angle) * force * 12;
+          const force = (200 - mdist) / 200;
+          p.x -= Math.cos(angle) * force * 8;
+          p.y -= Math.sin(angle) * force * 8;
         }
 
         // Pulsing size
-        const pulse = Math.sin(time * 2 + i) * 0.5 + 1;
+        const pulse = Math.sin(time * 1.5 + i) * 0.4 + 1;
         const currentSize = p.size * pulse;
 
         // Draw particle
         ctx.beginPath();
         ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 0.6;
         ctx.fill();
-        
-        // Add pulsing glow
-        ctx.shadowBlur = 20 * pulse;
-        ctx.shadowColor = p.color;
 
-        // Connections
+        // REMOVED: ctx.shadowBlur = 20 * pulse; - This was the main performance killer
+
+        // Connections - Only for near particles to save performance
         for (let j = i + 1; j < particles.length; j++) {
           const p2 = particles[j];
           const dx = p.x - p2.x;
           const dy = p.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < connectionDistance) {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = p.color; // Use particle color for lines
-            ctx.globalAlpha = (1 - dist / connectionDistance) * 0.45;
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
+          // Use manhattan distance for early exit check to avoid expensive sqrt
+          if (Math.abs(dx) < connectionDistance && Math.abs(dy) < connectionDistance) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < connectionDistance) {
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.strokeStyle = p.color;
+              ctx.globalAlpha = (1 - dist / connectionDistance) * 0.3;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
           }
         }
       });
